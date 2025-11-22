@@ -1,0 +1,263 @@
+   <!DOCTYPE html>
+   <html lang="en">
+   <head>
+     <meta charset="UTF-8">
+     <title>PanicPulse – Neon Login + Contacts</title>
+     <meta name="viewport" content="width=device-width, initial-scale=1">
+     <style>
+       :root {
+         --bg: #0a0a0a;
+         --card: #111;
+         --neon-cyan: #00ffff;
+         --neon-magenta: #ff00ff;
+         --text: #ffffff;
+         --muted: #a0a0a0;
+         --radius: 16px;
+         --shadow: 0 0 20px rgba(0, 255, 255, 0.35);
+       }
+       * {
+           box-sizing: border-box;
+           margin: 0;
+           padding: 0;
+           font-family: 'Inter', sans-serif;
+       }
+       body {
+           background: var(--bg);
+           color: var(--text);
+           display: flex;
+           align-items: center;
+           justify-content: center;
+           min-height: 100vh;
+           padding: 20px;
+       }
+       .card {
+           background: var(--card);
+           width: 100%;
+           max-width: 420px;
+           border-radius: var(--radius);
+           box-shadow: var(--shadow);
+           padding: 40px 32px;
+           text-align: center;
+           border: 1px solid var(--neon-cyan);
+           position: relative;
+           overflow: hidden;
+       }
+       .card::before {
+           content: '';
+           position: absolute;
+           top: -2px;
+           left: -2px;
+           right: -2px;
+           bottom: -2px;
+           background: linear-gradient(45deg, var(--neon-cyan), var(--neon-magenta));
+           border-radius: var(--radius);
+           z-index: -1;
+           filter: blur(8px);
+           opacity: 0.7;
+       }
+       h1 {
+           font-size: 28px;
+           font-weight: 700;
+           margin-bottom: 8px;
+           text-shadow: 0 0 8px var(--neon-cyan);
+       }
+       p {
+           color: var(--muted);
+           font-size: 14px;
+           margin-bottom: 24px;
+       }
+       .tabs {
+           display: flex;
+           background: rgba(0, 255, 255, 0.1);
+           border-radius: 10px;
+           padding: 4px;
+           gap: 4px;
+           margin-bottom: 24px;
+       }
+       .tab {
+           flex: 1;
+           padding: 10px;
+           border: none;
+           background: transparent;
+           color: var(--muted);
+           font-size: 15px;
+           font-weight: 500;
+           border-radius: 8px;
+           cursor: pointer;
+           transition: color .3s, background .3s, text-shadow .3s;
+       }
+       .tab.active {
+           color: #fff;
+           background: rgba(0, 255, 255, 0.2);
+           text-shadow: 0 0 6px var(--neon-cyan);
+       }
+       input {
+           width: 100%;
+           padding: 14px 16px;
+           margin-bottom: 16px;
+           background: rgba(0, 255, 255, 0.05);
+           border: 1px solid var(--neon-cyan);
+           border-radius: 10px;
+           color: var(--text);
+           font-size: 16px;
+           transition: border-color .3s, box-shadow .3s;
+       }
+       input:focus {
+           outline: none;
+           border-color: var(--neon-magenta);
+           box-shadow: 0 0 10px var(--neon-magenta);
+       }
+       button {
+           width: 100%;
+           padding: 16px;
+           background: linear-gradient(45deg, var(--neon-cyan), var(--neon-magenta));
+           color: #fff;
+           border: none;
+           border-radius: 10px;
+           font-size: 16px;
+           font-weight: 600;
+           cursor: pointer;
+           transition: box-shadow .3s, transform .2s;
+           box-shadow: 0 0 12px rgba(0, 255, 255, 0.4);
+       }
+       button:hover {
+           box-shadow: 0 0 20px rgba(0, 255, 255, 0.6);
+           transform: translateY(-2px);
+       }
+       .hidden {
+           display: none;
+       }
+       .contact-card {
+           background: rgba(0, 255, 255, 0.05);
+           border: 1px solid var(--neon-cyan);
+           border-radius: 10px;
+           padding: 14px;
+           margin-bottom: 12px;
+           animation: slideIn .3s ease;
+       }
+       @keyframes slideIn {
+           from { opacity: 0; transform: translateY(-10px) }
+           to { opacity: 1; transform: translateY(0) }
+       }
+       .remove-btn {
+           background: none;
+           border: none;
+           color: var(--neon-magenta);
+           font-size: 13px;
+           font-weight: 500;
+           cursor: pointer;
+           margin-left: 8px;
+           transition: color .3s;
+       }
+       .remove-btn:hover {
+           color: #fff;
+       }
+     </style>
+   </head>
+   <body>
+     <!-- 1. LOGIN / SIGN-UP CARD -->
+     <div id="authCard" class="card">
+       <h1>PanicPulse</h1>
+       <p>Your pulse, our priority</p>
+   
+       <div class="tabs">
+         <button class="tab active" id="loginTab">Login</button>
+         <button class="tab" id="signupTab">Sign Up</button>
+       </div>
+   
+       <input id="email" type="email" placeholder="Email">
+       <input id="phone" type="tel" placeholder="Phone">
+   
+       <button onclick="handleAuth()">Continue</button>
+     </div>
+   
+     <!-- 2. CONTACTS (visible only after Sign-Up) -->
+     <div id="contactsCard" class="card hidden">
+       <h1>Add Contact</h1>
+       <p>At least 1 contact is required</p>
+   
+       <div id="contactsList"></div>
+       <button id="addContactBtn">+ Add Contact</button>
+       <button onclick="finishSignup()">Save & Proceed</button>
+     </div>
+   
+     <script>
+       /* ---------- DATA STORE ---------- */
+       const store = {
+         email: "",
+         phone: "",
+         mode: "login",
+         contacts: []
+       };
+   
+       /* ---------- TAB SWITCH ---------- */
+       const loginTab  = document.getElementById("loginTab");
+       const signupTab = document.getElementById("signupTab");
+   
+       loginTab.onclick  = () => switchMode("login");
+       signupTab.onclick = () => switchMode("signup");
+   
+       function switchMode(m) {
+         store.mode = m;
+         loginTab.classList.toggle("active", m === "login");
+         signupTab.classList.toggle("active", m === "signup");
+       }
+   
+       /* ---------- AUTH SUBMIT ---------- */
+       function handleAuth() {
+         store.email = document.getElementById("email").value.trim();
+         store.phone = document.getElementById("phone").value.trim();
+         if (!store.email || !store.phone) return alert("Enter email & phone");
+   
+         if (store.mode === "login") {
+           // LOGIN: straight to dashboard (no contacts)
+           localStorage.setItem("panicpulse_user", JSON.stringify(store));
+           alert("✓ Logged in – welcome!");
+           window.location.href = "app.html"; // Redirect to main app
+         } else {
+           // SIGN-UP: show contacts card
+           showPage("contactsCard");
+           if (store.contacts.length === 0) addContactCard();
+         }
+       }
+   
+       /* ---------- CONTACTS (always visible after Sign-Up) ---------- */
+       const contactsList = document.getElementById("contactsList");
+       const addContactBtn = document.getElementById("addContactBtn");
+   
+       addContactBtn.onclick = () => addContactCard();
+   
+       function addContactCard() {
+         const card = document.createElement("div");
+         card.className = "contact-card";
+         card.innerHTML = `
+           <input placeholder="Contact Name">
+           <input placeholder="Contact Phone" type="tel">
+           <button class="remove-btn" onclick="this.parentElement.remove()">Remove</button>`;
+         contactsList.appendChild(card);
+       }
+   
+       function finishSignup() {
+         const cards = contactsList.querySelectorAll(".contact-card");
+         store.contacts = [];
+         cards.forEach(c => {
+           const name = c.querySelectorAll("input")[0].value.trim();
+           const phone = c.querySelectorAll("input")[1].value.trim();
+           if (name && phone) store.contacts.push({ name, phone });
+         });
+         if (store.contacts.length === 0) return alert("Add at least 1 contact");
+   
+         localStorage.setItem("panicpulse_user", JSON.stringify(store));
+         alert("✓ Signed up – welcome!");
+         window.location.href = "app.html"; // Redirect to main app
+       }
+   
+       /* ---------- UTIL ---------- */
+       function showPage(id) {
+         document.querySelectorAll(".card").forEach(c => c.classList.add("hidden"));
+         document.getElementById(id).classList.remove("hidden");
+       }
+     </script>
+   </body>
+   </html>
+   

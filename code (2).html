@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PanicPulse – Voice Emergency System</title>
+    <script src="https://cdn.jsdelivr.net/npm/annyang@2.6.1/dist/annyang.min.js"></script>
+    <style>
+        /* =====  YOUR ORIGINAL CSS (UNCHANGED)  ===== */
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:linear-gradient(180deg,#0a0a0a 0%,#1a1a1a 100%);color:#fff;height:100vh;overflow:hidden;position:relative;touch-action:manipulation}
+        .container{display:flex;flex-direction:column;align-items:center;justify-content:space-between;height:100vh;padding:20px;position:relative;z-index:1}
+        .header{margin-top:40px;text-align:center;animation:fadeIn .5s ease-out}
+        .title{font-size:24px;font-weight:700;letter-spacing:2px;color:#ff6b6b;text-transform:uppercase;display:flex;align-items:center;gap:10px}
+        .alert-icon{width:24px;height:24px;animation:blink 1s infinite}
+        .voice-status{position:absolute;top:120px;text-align:center;font-size:14px;color:#ff9e6b;opacity:0;transition:opacity .3s ease;background:rgba(255,107,107,.1);padding:8px 16px;border-radius:20px;border:1px solid rgba(255,107,107,.3)}
+        .voice-status.active{opacity:1}
+        .voice-status.listening{color:#4caf50;border-color:rgba(76,175,80,.3);background:rgba(76,175,80,.1)}
+        .waveform-container{position:absolute;top:25%;width:90%;max-width:400px;height:100px;display:flex;align-items:center;justify-content:center;gap:4px}
+        .wave-bar{width:4px;background:linear-gradient(to top,#ff6b6b,#ff9e6b);border-radius:2px;transition:height .1s ease;box-shadow:0 0 10px rgba(255,107,107,.5)}
+        .mic-container{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)}
+        .mic-button{width:180px;height:180px;border-radius:50%;background:linear-gradient(135deg,#ff6b6b 0%,#ff9e6b 100%);border:none;cursor:pointer;position:relative;animation:pulse 2s infinite;box-shadow:0 0 40px rgba(255,107,107,.6);transition:all .3s ease}
+        .mic-button:active{transform:scale(.95)}
+        .mic-icon{width:60px;height:60px;fill:#fff}
+        .mic-glow{position:absolute;top:-20px;left:-20px;right:-20px;bottom:-20px;border-radius:50%;background:radial-gradient(circle,rgba(255,107,107,.3) 0%,transparent 70%);animation:glow 2s infinite}
+        .instructions{position:absolute;bottom:60px;text-align:center;font-size:16px;color:#ff9e6b;animation:fadeIn .5s ease-out .3s both}
+        .heartbeat{display:inline-flex;gap:5px;margin-left:10px}
+        .dot{width:8px;height:8px;background:#ff6b6b;border-radius:50%;animation:heartbeat 1.5s infinite}
+        .dot:nth-child(2){animation-delay:.2s}
+        .dot:nth-child(3){animation-delay:.4s}
+        .emergency-options{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(10,10,10,.95);display:none;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:20px;animation:slideUp .3s ease-out}
+        .emergency-options.active{display:flex}
+        .option-button{width:90%;max-width:350px;padding:20px;background:linear-gradient(135deg,#ff6b6b 0%,#ff9e6b 100%);border:none;border-radius:15px;color:#fff;font-size:18px;font-weight:600;cursor:pointer;transition:all .2s ease;box-shadow:0 5px 20px rgba(255,107,107,.4);display:flex;align-items:center;justify-content:center;gap:10px}
+        .option-button:active{transform:scale(.98);box-shadow:0 3px 15px rgba(255,107,107,.6)}
+        .option-icon{width:24px;height:24px;fill:#fff}
+        .emergency-title{font-size:32px;font-weight:700;color:#ff6b6b;margin-bottom:30px;text-align:center}
+        .flash-alert{position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(circle,rgba(255,107,107,.3) 0%,transparent 70%);opacity:0;pointer-events:none;animation:flash .5s ease-out}
+        @keyframes pulse{0%,100%{transform:scale(1);box-shadow:0 0 40px rgba(255,107,107,.6)}50%{transform:scale(1.05);box-shadow:0 0 60px rgba(255,107,107,.8)}}
+        @keyframes glow{0%,100%{opacity:.5}50%{opacity:.8}}
+        @keyframes blink{0%,50%{opacity:1}51%,100%{opacity:.3}}
+        @keyframes heartbeat{0%,100%{transform:scale(1);opacity:.7}50%{transform:scale(1.3);opacity:1}}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes slideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+        @keyframes flash{0%{opacity:0}50%{opacity:1}100%{opacity:0}}
+        .voice-active .mic-button{animation:pulse .5s infinite}
+        .voice-active .wave-bar{animation:wave .5s infinite alternate}
+        @keyframes wave{0%{height:20px}100%{height:60px}}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">
+                <svg class="alert-icon" viewBox="0 0 24 24" fill="#ff6b6b"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+                PanicPulse Active
+            </h1>
+        </div>
+
+        <div class="voice-status" id="voiceStatus">🎤 Listening...</div>
+
+        <div class="waveform-container" id="waveform"></div>
+
+        <div class="mic-container">
+            <div class="mic-glow"></div>
+            <button class="mic-button" id="micButton">
+                <svg class="mic-icon" viewBox="0 0 24 24"><path d="M12 14c1.66 0 2.99-1.34 2.99-3L15 5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm5.3-3c0 3-2.54 5.1-5.3 5.1S6.7 14 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28c3.28-.48 6-3.3 6-6.72h-1.7z"/></
