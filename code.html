@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Emergency Assistant</title>
+    <style>
+        /* Mobile-first responsive design with high contrast */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #ffffff;
+            color: #000000;
+            line-height: 1.6;
+        }
+        header {
+            background-color: #ff0000; /* Red for alerts */
+            color: #ffffff;
+            padding: 1rem;
+            text-align: center;
+        }
+        nav {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        nav a {
+            color: #ffffff;
+            text-decoration: none;
+            padding: 0.5rem;
+            border-radius: 5px;
+            background-color: #cc0000;
+        }
+        nav a:hover {
+            background-color: #aa0000;
+        }
+        section {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .hero {
+            text-align: center;
+            background-color: #f0f0f0;
+            padding: 2rem;
+            border-radius: 10px;
+        }
+        .emergency-btn {
+            background-color: #ff0000;
+            color: #ffffff;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.2rem;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+        .emergency-btn:hover {
+            background-color: #cc0000;
+        }
+        .chat-container {
+            border: 1px solid #ccc;
+            height: 400px;
+            overflow-y: auto;
+            padding: 1rem;
+            background-color: #f9f9f9;
+            border-radius: 10px;
+        }
+        .chat-bubble {
+            margin: 0.5rem 0;
+            padding: 0.5rem;
+            border-radius: 10px;
+        }
+        .user-bubble {
+            background-color: #007bff;
+            color: #ffffff;
+            text-align: right;
+        }
+        .bot-bubble {
+            background-color: #e9ecef;
+            color: #000000;
+        }
+        #chat-input {
+            width: 100%;
+            padding: 0.5rem;
+            margin-top: 1rem;
+        }
+        .accordion {
+            margin: 1rem 0;
+        }
+        .accordion-item {
+            border: 1px solid #ccc;
+            margin-bottom: 0.5rem;
+        }
+        .accordion-header {
+            background-color: #ff0000;
+            color: #ffffff;
+            padding: 1rem;
+            cursor: pointer;
+        }
+        .accordion-content {
+            display: none;
+            padding: 1rem;
+            background-color: #f9f9f9;
+        }
+        .location-display {
+            margin-top: 1rem;
+            padding: 1rem;
+            background-color: #e9ecef;
+            border-radius: 5px;
+        }
+        footer {
+            background-color: #333;
+            color: #ffffff;
+            text-align: center;
+            padding: 1rem;
+            margin-top: 2rem;
+        }
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            nav {
+                flex-direction: column;
+            }
+            .hero {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>AI Emergency Assistant</h1>
+        <nav>
+            <a href="#home">Home</a>
+            <a href="#chat">Chat</a>
+            <a href="#features">Features</a>
+        </nav>
+    </header>
+
+    <section id="home" class="hero">
+        <h2>Get Instant Help in Emergencies with AI-Powered Support</h2>
+        <p>This assistant provides quick access to emergency services and first-aid guidance.</p>
+        <button class="emergency-btn" onclick="callEmergency()">Emergency Call (100 Police Helpline)</button>
+        <div id="location-status"></div>
+    </section>
+
+    <section id="chat">
+        <h2>AI Chat Assistant</h2>
+        <div class="chat-container" id="chat-container">
+            <div class="chat-bubble bot-bubble">Hello! How can I assist you in an emergency?</div>
+        </div>
+        <input type="text" id="chat-input" placeholder="Type your emergency query here..." onkeypress="handleKeyPress(event)">
+        <button onclick="sendMessage()">Send</button>
+    </section>
+
+    <section id="features">
+        <h2>Features</h2>
+        
+        <h3>First Aid Tips</h3>
+        <div class="accordion">
+            <div class="accordion-item">
+                <div class="accordion-header" onclick="toggleAccordion(this)">Choking</div>
+                <div class="accordion-content">
+                    <p>1. Encourage coughing. 2. Perform the Heimlich maneuver if needed. 3. Call emergency services.</p>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <div class="accordion-header" onclick="toggleAccordion(this)">Burns</div>
+                <div class="accordion-content">
+                    <p>1. Cool the burn with running water. 2. Cover with a clean cloth. 3. Seek medical help for severe burns.</p>
+                </div>
+            </div>
+            <div class="accordion-item">
+                <div class="accordion-header" onclick="toggleAccordion(this)">Heart Attack</div>
+                <div class="accordion-content">
+                    <p>1. Call emergency services immediately. 2. Have the person sit or lie down. 3. If trained, perform CPR.</p>
+                </div>
+            </div>
+        </div>
+
+        <h3>Emergency Contacts</h3>
+        <ul>
+            <li>Police: 100</li>
+            <li>Fire: 101</li>
+            <li>Ambulance: 102</li>
+            <li>Local Hospital: [Insert local number]</li>
+        </ul>
+
+        <h3>Location Sharing</h3>
+        <button class="emergency-btn" onclick="shareLocation()">Enable GPS & Share Location</button>
+        <div class="location-display" id="location-display">Location: Not shared yet.</div>
+    </section>
+
+    <footer>
+        <p>This is not a substitute for professional medical advice. Always consult qualified professionals.</p>
+    </footer>
+
+    <script>
+        // Simple chatbot knowledge base
+        const knowledgeBase = {
+            "heart attack": "1. Call emergency services (100). 2. Have the person rest comfortably. 3. If unconscious, start CPR if trained.",
+            "choking": "1. Encourage coughing. 2. Perform abdominal thrusts (Heimlich). 3. Call for help if needed.",
+            "burns": "1. Cool with water for 10-20 minutes. 2. Cover loosely. 3. Seek medical attention.",
+            "default": "I'm sorry, I don't have specific advice for that. Please call emergency services at 100."
+        };
+
+        // Chat functionality
+        function sendMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            if (message) {
+                addMessage(message, 'user');
+                const response = getResponse(message.toLowerCase());
+                addMessage(response, 'bot');
+                input.value = '';
+            }
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        function addMessage(text, sender) {
+            const container = document.getElementById('chat-container');
+            const bubble = document.createElement('div');
+            bubble.className = `chat-bubble ${sender}-bubble`;
+            bubble.textContent = text;
+            container.appendChild(bubble);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function getResponse(query) {
+            for (const key in knowledgeBase) {
+                if (query.includes(key)) {
+                    return knowledgeBase[key];
+                }
+            }
+            return knowledgeBase.default;
+        }
+
+        // Emergency call simulation
+        function callEmergency() {
+            if (confirm("This will simulate calling 100. In a real emergency, dial 100 directly.")) {
+                window.location.href = 'tel:100'; // Opens dialer
+            }
+        }
+
+        // Location sharing
+        function shareLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(showPosition, showError);
+            } else {
+                alert("Geolocation is not supported by this browser.");
+            }
+        }
+
+        function showPosition(position) {
+            const display = document.getElementById('location-display');
+            display.textContent = `Latitude: ${position.coords.latitude}, Longitude: ${position.coords.longitude}`;
+            // In production, send to server or emergency service
+        }
+
+        function showError(error) {
+            const display = document.getElementById('location-display');
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    display.textContent = "User denied the request for Geolocation.";
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    display.textContent = "Location information is unavailable.";
+                    break;
+                case error.TIMEOUT:
+                    display.textContent = "The request to get user location timed out.";
+                    break;
+                case error.UNKNOWN_ERROR:
+                    display.textContent = "An unknown error occurred.";
+                    break;
+            }
+        }
+
+        // Accordion toggle
+        function toggleAccordion(header) {
+            const content = header.nextElementSibling;
+            content.style.display = content.style.display === 'block' ? 'none' : 'block';
+        }
+    </script>
+</body>
+</html>
